@@ -9,7 +9,7 @@ from schemas.url_schemas import URLBase
 router = APIRouter()
 
 
-@router.get("/{code}")
+@router.get("/url/{code}")
 async def resolve_url(code: str, url_service: Annotated[URLService, Depends(get_url_service)]):
     """Endpoint to resolve a short URL code to its original URL."""
     original_url = await url_service.resolve_url(code)

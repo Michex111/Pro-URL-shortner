@@ -1,5 +1,9 @@
 from contextlib import asynccontextmanager
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
+from pathlib import Path
 from typing import Annotated
 import uvicorn
 
@@ -19,14 +23,34 @@ async def lifespan(app_: FastAPI):
     yield
     # No specific shutdown actions needed
 
-app = FastAPI(name=settings.APP_NAME, description="A simple URL shortener API built with FastAPI.", lifespan=lifespan)
+app = FastAPI(title=settings.APP_NAME, description="A simple URL shortener API built with FastAPI.", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # fine for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-app.include_router(url_router, prefix="/url", tags=["URL Shortener"])
+app.include_router(url_router, prefix="", tags=["URL Shortener"])
+
+BASE_DIR = Path(__file__).resolve().parent
+
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @app.get("/health")
 def db_health_check(db: Annotated[AsyncSession, Depends(get_db)]):
     """Health check endpoint."""
+
+
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    """Render the home page."""
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+    )
 
     
     

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <style>
+    :root {
+      --page: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #65728a;
+      --line: #d7dfec;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: #dbeafe;
+      --danger-bg: #fff1f2;
+      --danger: #b42318;
+      --success-bg: #eff6ff;
+      --shadow: 0 24px 70px rgba(30, 41, 59, 0.13);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      min-height: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(37, 99, 235, 0.08), transparent 38%),
+        var(--page);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .card {
+      width: min(100%, 720px);
+      padding: clamp(28px, 5vw, 56px);
+      background: var(--card);
+      border: 1px solid rgba(215, 223, 236, 0.9);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      margin-bottom: 36px;
+      text-align: center;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.4vw, 1.3rem);
+      line-height: 1.45;
+    }
+
+    .shortener-form {
+      width: min(100%, 560px);
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .field {
+      display: grid;
+      gap: 10px;
+    }
+
+    .field label {
+      color: #0f2340;
+      font-size: 0.98rem;
+      font-weight: 700;
+    }
+
+    .url-input {
+      width: 100%;
+      height: 56px;
+      padding: 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #ffffff;
+      color: var(--text);
+      font: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .url-input::placeholder {
+      color: #94a3b8;
+    }
+
+    .url-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+    }
+
+    .url-input:disabled {
+      cursor: wait;
+      opacity: 0.72;
+    }
+
+    .submit-button,
+    .copy-button {
+      border: 0;
+      border-radius: 14px;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .submit-button {
+      width: 100%;
+      height: 56px;
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 14px 26px rgba(37, 99, 235, 0.24);
+    }
+
+    .submit-button:hover:not(:disabled) {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .submit-button:disabled {
+      background: #93b5f6;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .submit-button:focus-visible,
+    .copy-button:focus-visible,
+    .url-input:focus-visible {
+      outline: 4px solid rgba(37, 99, 235, 0.18);
+      outline-offset: 2px;
+    }
+
+    .error-message {
+      display: none;
+      width: min(100%, 560px);
+      margin: 18px auto 0;
+      padding: 13px 15px;
+      border-radius: 14px;
+      background: var(--danger-bg);
+      color: var(--danger);
+      font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    .error-message.is-visible {
+      display: block;
+    }
+
+    .result {
+      display: none;
+      width: min(100%, 560px);
+      margin: 22px auto 0;
+      padding: 16px;
+      border: 1px solid #bfdbfe;
+      border-radius: 16px;
+      background: var(--success-bg);
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .result.is-visible {
+      display: block;
+      animation: fade-in 220ms ease forwards;
+    }
+
+    .result-title {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      font-weight: 750;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .short-link {
+      flex: 1;
+      min-width: 0;
+      color: var(--accent);
+      font-weight: 750;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      text-decoration: none;
+    }
+
+    .short-link:hover {
+      text-decoration: underline;
+    }
+
+    .copy-button {
+      flex: 0 0 auto;
+      min-width: 84px;
+      height: 42px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--text);
+    }
+
+    .copy-button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.12);
+    }
+
+    .copy-note {
+      min-height: 20px;
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    @keyframes fade-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        padding: 18px;
+      }
+
+      .card {
+        border-radius: 20px;
+      }
+
+      .header {
+        margin-bottom: 28px;
+      }
+
+      .result-row {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .copy-button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card" aria-labelledby="page-title">
+    <header class="header">
+      <h1 class="title" id="page-title">URL Shortener</h1>
+      <p class="subtitle">Paste a long URL to shorten it</p>
+    </header>
+
+    <form class="shortener-form" id="shortener-form" novalidate>
+      <div class="field">
+        <label for="url-input">Long URL</label>
+        <input
+          class="url-input"
+          id="url-input"
+          name="url"
+          type="url"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://example.com/very/long/url"
+          required
+        >
+      </div>
+
+      <button class="submit-button" id="submit-button" type="submit" disabled>
+        Shorten URL
+      </button>
+    </form>
+
+    <p class="error-message" id="error-message" role="alert"></p>
+
+    <section class="result" id="result" aria-live="polite">
+      <p class="result-title">Shortened URL</p>
+      <div class="result-row">
+        <a class="short-link" id="short-link" href="#" target="_blank" rel="noopener noreferrer"></a>
+        <button class="copy-button" id="copy-button" type="button">Copy</button>
+      </div>
+      <p class="copy-note" id="copy-note"></p>
+    </section>
+  </main>
+
+  <script>
+    const API_ENDPOINT = "http://localhost:8000/shorten";
+
+    const form = document.getElementById("shortener-form");
+    const input = document.getElementById("url-input");
+    const submitButton = document.getElementById("submit-button");
+    const errorMessage = document.getElementById("error-message");
+    const result = document.getElementById("result");
+    const shortLink = document.getElementById("short-link");
+    const copyButton = document.getElementById("copy-button");
+    const copyNote = document.getElementById("copy-note");
+
+    let activeShortUrl = "";
+
+    input.addEventListener("input", () => {
+      submitButton.disabled = input.value.trim() === "";
+      clearError();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const longUrl = input.value.trim();
+      clearError();
+      hideResult();
+
+      if (!longUrl) {
+        showError("Please enter a URL.");
+        return;
+      }
+
+      if (!isValidUrl(longUrl)) {
+        showError("Please enter a valid URL starting with http:// or https://.");
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ url: longUrl })
+        });
+
+        if (!response.ok) {
+          throw new Error("The shortening request failed.");
+        }
+
+        const data = await response.json();
+
+        if (!data.short_url) {
+          throw new Error("The API response did not include a short URL.");
+        }
+
+        showResult(data.short_url);
+        await copyToClipboard(data.short_url, true);
+      } catch (error) {
+        showError("Failed to shorten URL. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    copyButton.addEventListener("click", async () => {
+      if (activeShortUrl) {
+        await copyToClipboard(activeShortUrl, false);
+      }
+    });
+
+    function isValidUrl(value) {
+      try {
+        const url = new URL(value);
+        return url.protocol === "http:" || url.protocol === "https:";
+      } catch {
+        return false;
+      }
+    }
+
+    function setLoading(isLoading) {
+      input.disabled = isLoading;
+      submitButton.textContent = isLoading ? "Shortening..." : "Shorten URL";
+      submitButton.disabled = isLoading || input.value.trim() === "";
+    }
+
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add("is-visible");
+    }
+
+    function clearError() {
+      errorMessage.textContent = "";
+      errorMessage.classList.remove("is-visible");
+    }
+
+    function showResult(shortUrl) {
+      activeShortUrl = shortUrl;
+      shortLink.href = shortUrl;
+      shortLink.textContent = shortUrl;
+      copyNote.textContent = "";
+      result.classList.add("is-visible");
+    }
+
+    function hideResult() {
+      activeShortUrl = "";
+      shortLink.href = "#";
+      shortLink.textContent = "";
+      copyNote.textContent = "";
+      result.classList.remove("is-visible");
+    }
+
+    async function copyToClipboard(text, automatic) {
+      try {
+        await navigator.clipboard.writeText(text);
+        copyButton.textContent = "Copied";
+        copyNote.textContent = automatic ? "Copied to clipboard automatically." : "Copied to clipboard.";
+
+        window.setTimeout(() => {
+          copyButton.textContent = "Copy";
+        }, 1500);
+      } catch {
+        copyButton.textContent = "Copy";
+        copyNote.textContent = "Copy unavailable. Select the link to copy it manually.";
+      }
+    }
+  </script>
+</body>
+</html>
