@@ -1,4 +1,5 @@
-=======
+___
+
 # Pro URL Shortener
 
 A modern URL shortening service built with FastAPI, async SQLAlchemy, Redis caching, and Base62 encoding.
