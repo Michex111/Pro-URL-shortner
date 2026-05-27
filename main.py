@@ -9,10 +9,7 @@ import uvicorn
 
 from api.routes.url import router as url_router
 from db.session import get_db, Base, engine, AsyncSession
-from db.models import URL
 from core.config import settings
-from core.redis import redis_client
-from services.url_service import URLService
 
 @asynccontextmanager
 async def lifespan(app_: FastAPI):
