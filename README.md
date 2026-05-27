@@ -210,4 +210,3 @@ MIT License
 ## 👨‍💻 Author
 
 Built as a modern backend engineering project using FastAPI and async Python tooling.
->>>>>>> 65f4041 (feat: fixed db pinging & updated readme)
